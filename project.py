@@ -1,16 +1,32 @@
-import sys
+import sys #Used to quit the program after saving decks to text files
 
 
 class Deck:
     def __init__(self, name, cards=None):
         self.name = name
         self.cards =cards if cards is not None else {}
+    def save_to_file(self):
+         
+            with open(f"{self.name}.txt", "w") as deck_file:
+                 for key, value in self.cards.items():
+                    deck_file.write(f"{key}:{value}\n")
+                 print(f"Deck '{self.name}' saved to file.")
+    def initialize_deck_from_file(self):
+        
+            with open(f"{self.name}.txt", "r") as file:
+                lines=file.readlines()
+                for line in lines:
+                    key, value=line.strip().split(":")
+                    self.cards[key]=value
 
-decks = [Deck("Deck 1"), Deck("Deck 2"), Deck("Deck 3")]# 3 decks by default
+
+
+decks = [Deck("deck1"), Deck("deck2"), Deck("deck3")]# 3 decks by default
+'''
 def add_deck(name):#Add a deck to the default 3 decks. Use this if you want to add another time interval
     decks.append(Deck(name))
     print(f"Current decks: {len(decks)}")
-
+'''
 
 def add_flashcard(decks_list, deck_name, front, back):# Add a flashcard to any deck
     deck_exists=False
@@ -80,19 +96,29 @@ def study_deck(decks_list, deck_name):
             print(f"Deck '{deck_name} not found")
 
 '''
-def move_card(decks_list,giver, receiver, front):
-    deck_exists=False
-    for recer in decks_list:
-        if recer ==deck.name:
-        
-            for deck in decks_list:
-                    if giver==deck.name:
-                        deck_exists=True
-                        recer.cards.update(front, deck.cards.pop(front))
-        if not deck_exists:
-                             print(f"Deck {receiver} not found")        
-                    if not deck_exists:
-                        print(f"Deck {giver} not found")
+def move_card(decks_list, giver, receiver, front):
+    giver_deck = None
+    receiver_deck = None
+    
+    for deck in decks_list:
+        if deck.name == giver:
+            giver_deck = deck
+        if deck.name == receiver:
+            receiver_deck = deck
+        if giver_deck and receiver_deck:
+            break
+    
+    if not giver_deck:
+        print(f"Deck {giver} not found")
+    elif not receiver_deck:
+        print(f"Deck {receiver} not found")
+    else:
+        card = giver_deck.cards.pop(front, None)
+        if card is None:
+            print(f"Card '{front}' not found in deck '{giver}'")
+        else:
+            receiver_deck.cards[front] = card
+            print(f"Card '{front}' moved from '{giver}' to '{receiver}'")
 
 
 
@@ -185,34 +211,58 @@ def study_deck(decks_list, deck_name):  # Study a deck
 
 
 def main():
+    instructions="\nThis is a flashcard program based on the Leitner system for spaced repetition.\nEvery time you answer a question correctly, it will move up into the next deck, and vice versa if you answer a question incorrectly.\nIt's up to you how often you study each deck, and it also depends on how far away your test date is.\nFor example, you might study deck 1 every day, deck 2 every other day, and deck 3 once a week if you have a test coming up in a month.\nHowever, the Leitner system is most effective over long periods of time, so that your pool of knowledge can grow methodically.\n\nThis program allows you to add, remove, and move cards in existing decks, create new decks, view their contents, and of course study your flashcards.\nOnce you're done studying, 'sq' will save your cards so they can be loaded next time you open the program--just make sure to keep the program file and the deck files in the same folder.\nYou can even edit the text files directly to add or remove cards, and reload the program to study your edited decks."
+    print(instructions)
+    for deck in decks:
+        deck.initialize_deck_from_file()
     while True:
         choice = input(
-            "\ns: Study\na: Add to a deck\nd: Delete card from a deck\nc: Create a new deck\nv: View the contents of a deck\nm: Move a card to a different deck\nWhat would you like to do?"
+            "\ns: Study\na: Add to a deck\nd: Delete card from a deck\nv: View the contents of a deck\nm: Move a card to a different deck\nsq: Save decks to your computer and quit the program\nq: Quit without saving\nWhat would you like to do? "
         ).lower().strip()
         if choice=="a":
-            deck_name=input("Which deck are you adding to? ")
-            front=input("Front of card: ")
-            back=input("Back of card: ")
-            add_flashcard(decks,deck_name, front, back)
+            deck_name=input("Which deck are you adding to? ").strip()
+            front=input("Front of card: ").strip()
+            back=input("Back of card: ").strip()
+            if front=="":
+                print("Card must have a front!")
+            elif back=="":
+                print("Card must have a back!")
+            else:
+                add_flashcard(decks,deck_name, front, back)
         elif choice=="d":
-            deck_name=input("Which deck are you removing from? ")
+            deck_name=input("Which deck are you removing from? ").strip()
             front=input("Front of card: ")
             delete_flashcard(decks, deck_name, front)
-
-        elif choice=="c":
-            new_deck_name=input("Name your new deck: ")
-            add_deck(new_deck_name)
+        
+        #elif choice=="c":
+           # new_deck_name=input("Name your new deck: ").strip()
+            #add_deck(new_deck_name)
+        
         elif choice=="v":
-            deck_name=input("Which deck would you like to view? ")
+            deck_name=input("Which deck would you like to view? ").strip()
             view_deck_contents(decks, deck_name)
         elif choice=="s":
-            deck_name=input("Which deck would you like to study? ")
+            deck_name=input("Which deck would you like to study? ").strip()
             study_deck(decks, deck_name)
         elif choice=="m":
-            giver_deck=input("Move a card from which deck? ")
-            receiver_deck=input("Move to which deck? ")
-            front=input("Front of card: ")
+            giver_deck=input("Move a card from which deck? ").strip()
+            receiver_deck=input("Move to which deck? ").strip()
+            front=input("Front of card: ").strip()
             move_card(decks, giver_deck, receiver_deck, front)
+        elif choice=="q":
+            while True:
+                    quit=input("Are you sure you want to quit without saving your decks?(y/n) ").strip().lower()
+                    if quit=="y":
+                        sys.exit("Decks not saved. See you next time!")
+                    elif quit=="n":
+                        break
+            
+        elif choice=="sq":
+             for deck in decks:
+                  deck.save_to_file()
+             
+             sys.exit("All decks saved. See you next time!")
+
         
 
 
